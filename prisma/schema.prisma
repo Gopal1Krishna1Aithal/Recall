@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum ReviewRating {
+  Blank
+  Shaky
+  GotIt @map("Got It")
+}
+
+model User {
+  userId      String       @id @default(uuid()) @map("user_id")
+  email       String       @unique
+  createdAt   DateTime     @default(now()) @map("created_at")
+  problems    ProblemLog[]
+
+  @@map("users")
+}
+
+model ProblemLog {
+  problemId    String            @id @default(uuid()) @map("problem_id")
+  userId       String            @map("user_id")
+  user         User              @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  title        String
+  lcUrl        String            @map("lc_url")
+  note         String
+  confidence   Int               @default(3)
+  intervalDays Int               @default(1) @map("interval_days")
+  nextDue      DateTime          @default(dbgenerated("(datetime('now', '+1 day'))")) @map("next_due")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  history      RevisionHistory[]
+
+  @@unique([userId, lcUrl], name: "unique_user_problem")
+  @@index([userId, nextDue], map: "idx_problems_due")
+  @@map("problem_logs")
+}
+
+model RevisionHistory {
+  reviewId   String       @id @default(uuid()) @map("review_id")
+  problemId  String       @map("problem_id")
+  problem    ProblemLog   @relation(fields: [problemId], references: [problemId], onDelete: Cascade)
+  rating     ReviewRating
+  reviewedAt DateTime     @default(now()) @map("reviewed_at")
+
+  @@map("revision_history")
+}
