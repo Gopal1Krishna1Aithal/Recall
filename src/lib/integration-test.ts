@@ -141,6 +141,29 @@ async function runTests() {
   }
   console.log('Spaced repetition updates correctly applied to database.');
 
+  // 5. Verify Custom Interval Override
+  const customIntervalDays = 7;
+  const customNextDue = new Date();
+  customNextDue.setDate(customNextDue.getDate() + customIntervalDays);
+
+  await prisma.problemLog.update({
+    where: { problemId: problemA1.problemId },
+    data: {
+      intervalDays: customIntervalDays,
+      confidence: 5,
+      nextDue: customNextDue,
+    }
+  });
+
+  const customUpdated = await prisma.problemLog.findUnique({
+    where: { problemId: problemA1.problemId }
+  });
+
+  if (!customUpdated || customUpdated.intervalDays !== 7) {
+    throw new Error('Custom interval override failed to update in database.');
+  }
+  console.log('Custom interval override updates correctly verified.');
+
   // Clean up
   await prisma.user.deleteMany({
     where: {

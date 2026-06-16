@@ -16,10 +16,11 @@ enum ReviewRating {
 }
 
 model User {
-  userId      String       @id @default(uuid()) @map("user_id")
-  email       String       @unique
-  createdAt   DateTime     @default(now()) @map("created_at")
-  problems    ProblemLog[]
+  userId           String       @id @default(uuid()) @map("user_id")
+  email            String       @unique
+  leetcodeUsername String?      @map("leetcode_username")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  problems         ProblemLog[]
 
   @@map("users")
 }
@@ -35,6 +36,7 @@ model ProblemLog {
   intervalDays Int               @default(1) @map("interval_days")
   nextDue      DateTime          @default(dbgenerated("(datetime('now', '+1 day'))")) @map("next_due")
   createdAt    DateTime          @default(now()) @map("created_at")
+  tags         String?
   history      RevisionHistory[]
 
   @@unique([userId, lcUrl], name: "unique_user_problem")
@@ -43,11 +45,13 @@ model ProblemLog {
 }
 
 model RevisionHistory {
-  reviewId   String       @id @default(uuid()) @map("review_id")
-  problemId  String       @map("problem_id")
-  problem    ProblemLog   @relation(fields: [problemId], references: [problemId], onDelete: Cascade)
-  rating     ReviewRating
-  reviewedAt DateTime     @default(now()) @map("reviewed_at")
+  reviewId      String       @id @default(uuid()) @map("review_id")
+  problemId     String       @map("problem_id")
+  problem       ProblemLog   @relation(fields: [problemId], references: [problemId], onDelete: Cascade)
+  rating        ReviewRating
+  failureReason String?      @map("failure_reason")
+  sketch        String?
+  reviewedAt    DateTime     @default(now()) @map("reviewed_at")
 
   @@map("revision_history")
 }
